@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Plan Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --accent: #FFD23F;
+            --dark: #1A1A2E;
+            --success: #06D6A0;
+            --white: #FFFFFF;
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            color: var(--dark);
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 2.5rem;
+            color: var(--white);
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+        }
+        .header p { color: var(--accent); font-size: 1.1rem; }
+        .main-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-screen, .main-content { display: none; }
+        .login-screen.active, .main-content.active { display: block; }
+        .login-screen { text-align: center; padding: 2rem; }
+        .login-screen h2 {
+            font-family: 'Archivo Black', sans-serif;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+        .login-form { max-width: 400px; margin: 0 auto; }
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .hint { font-size: 0.85rem; color: #666; margin-top: 0.25rem; font-style: italic; }
+        input, textarea, select {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        textarea { min-height: 100px; resize: vertical; }
+        button {
+            padding: 1rem 2rem;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #E85A2A; transform: translateY(-2px); }
+        .btn-secondary { background: #E0E0E0; color: var(--dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #05b386; }
+        .login-btn { width: 100%; background: var(--secondary); color: white; }
+        .login-btn:hover { background: #003d6e; }
+        .login-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .status-bar {
+            background: #E3F2FD;
+            border: 2px solid var(--secondary);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .status-bar .user-info strong { color: var(--secondary); }
+        .status-bar .buttons { display: flex; gap: 0.5rem; }
+        .btn-save {
+            background: var(--success);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+        .btn-logout {
+            background: #6c757d;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+        .progress-tracker {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+            padding: 0 1rem;
+        }
+        .progress-line {
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            width: 90%;
+            height: 4px;
+            background: #E0E0E0;
+        }
+        .progress-fill {
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            height: 4px;
+            background: var(--success);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        .step { text-align: center; position: relative; z-index: 2; flex: 1; }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #E0E0E0;
+            margin: 0 auto 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .step.active .step-circle { background: var(--secondary); color: white; transform: scale(1.2); }
+        .step.completed .step-circle { background: var(--success); color: white; }
+        .step-label { font-size: 0.75rem; font-weight: 500; color: #666; }
+        .step.active .step-label { color: var(--secondary); font-weight: 700; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.5s ease; }
+        .section h3 {
+            font-family: 'Archivo Black', sans-serif;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-left: 5px solid var(--primary);
+            padding-left: 1rem;
+        }
+        .tips-box {
+            background: #E3F2FD;
+            border-left: 4px solid var(--secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .tips-box h4 { color: var(--secondary); margin-bottom: 0.5rem; }
+        .tips-box ul { margin-left: 1.5rem; line-height: 1.8; }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: space-between;
+        }
+        .button-group button { flex: 1; }
+        .checkbox-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: #F8F9FA;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .checkbox-item:hover { background: #E9ECEF; }
+        .checkbox-item input { width: 20px; height: 20px; margin-right: 0.75rem; }
+        .menu-builder {
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .menu-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #F8F9FA;
+            border-radius: 8px;
+        }
+        .menu-item input, .menu-item select { margin: 0; padding: 0.5rem; }
+        .remove-btn {
+            background: #DC3545;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        .add-item-btn {
+            background: var(--secondary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+        .validation-msg {
+            background: #FFF3CD;
+            border: 2px solid #FFC107;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .validation-msg.show { display: block; }
+        .error-msg {
+            background: #F8D7DA;
+            border: 2px solid #DC3545;
+            color: #721C24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .success-msg {
+            background: #D1F4E0;
+            border: 2px solid var(--success);
+            color: #0F5132;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .summary-section {
+            background: #F8F9FA;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .summary-section h4 { color: var(--secondary); margin-bottom: 0.5rem; }
+        .summary-item { padding: 0.5rem 0; border-bottom: 1px solid #DEE2E6; }
+        .summary-item:last-child { border-bottom: none; }
+        .summary-label { font-weight: 700; }
+        .summary-value { color: #495057; white-space: pre-wrap; }
+        .completion-card { text-align: center; padding: 2rem; }
+        .completion-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .completion-card h2 {
+            font-family: 'Archivo Black', sans-serif;
+            color: var(--success);
+            margin-bottom: 1rem;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-overlay.show { display: flex; }
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #E0E0E0;
+            border-top-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            z-index: 1001;
+            display: none;
+        }
+        .toast.show { display: block; animation: slideIn 0.3s ease; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: #DC3545; }
+        .submitted-banner {
+            background: linear-gradient(135deg, var(--success) 0%, #05b386 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 700;
+            display: none;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8rem; }
+            .main-card { padding: 1rem; }
+            .menu-item { grid-template-columns: 1fr; }
+            .button-group { flex-direction: column; }
+            .status-bar { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    <div class="loading-overlay" id="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loadingText">Loading...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Business Plan Builder</h1>
+            <p>Create Your Classroom Café Business Plan</p>
+        </div>
+
+        <div class="main-card">
+            <!-- LOGIN SCREEN -->
+            <div class="login-screen active" id="loginScreen">
+                <h2>👋 Welcome!</h2>
+                <p>Enter your details to start or continue your business plan.</p>
+                <div class="login-form">
+                    <div class="form-group">
+                        <label>Student ID *</label>
+                        <input type="text" id="loginId" placeholder="e.g., 2024-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="loginName" placeholder="e.g., Juan Dela Cruz">
+                    </div>
+                    <div id="loginError" class="error-msg" style="display:none;"></div>
+                    <button class="login-btn" id="loginBtn" onclick="handleLogin()">Start / Continue My Plan</button>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="main-content" id="mainContent">
+                <div class="status-bar">
+                    <div class="user-info">
+                        <span>👤 <strong id="userName"></strong></span>
+                        <span id="saveStatus" style="color:#666;font-size:0.9rem;margin-left:1rem;">Not saved yet</span>
+                    </div>
+                    <div class="buttons">
+                        <button class="btn-save" id="saveBtn" onclick="saveProgress()">💾 Save</button>
+                        <button class="btn-logout" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+
+                <div class="submitted-banner" id="submittedBanner">✅ You have already submitted your business plan.</div>
+
+                <div class="progress-tracker">
+                    <div class="progress-line"></div>
+                    <div class="progress-fill" id="progressFill"></div>
+                    <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Summary</div></div>
+                    <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Description</div></div>
+                    <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Products</div></div>
+                    <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Market</div></div>
+                    <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Marketing</div></div>
+                    <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">Operations</div></div>
+                    <div class="step" data-step="7"><div class="step-circle">7</div><div class="step-label">Financial</div></div>
+                </div>
+
+                <!-- SECTION 1 -->
+                <div class="section active" id="section1">
+                    <h3>1. Executive Summary</h3>
+                    <div class="tips-box">
+                        <h4>💡 Tips:</h4>
+                        <ul>
+                            <li>Your café name should be catchy and memorable</li>
+                            <li>Mission statement explains WHY your café exists</li>
+                        </ul>
+                    </div>
+                    <div class="form-group">
+                        <label>Café Name *</label>
+                        <input type="text" id="cafeName" placeholder="e.g., The Study Brew">
+                    </div>
+                    <div class="form-group">
+                        <label>Mission Statement *</label>
+                        <textarea id="mission" placeholder="What is the purpose of your café?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Brief Description *</label>
+                        <textarea id="briefDesc" placeholder="Describe what your café offers..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Main Goal *</label>
+                        <input type="text" id="mainGoal" placeholder="e.g., Raise ₱10,000 for our class fund">
+                    </div>
+                    <div class="validation-msg" id="val1"></div>
+                    <div class="button-group">
+                        <button class="btn-secondary" disabled>Previous</button>
+                        <button class="btn-primary" onclick="nextSection(1)">Next →</button>
+                    </div>
+                </div>
+
+                <!-- SECTION 2 -->
+                <div class="section" id="section2">
+                    <h3>2. Business Description</h3>
+                    <div class="form-group">
+                        <label>Type of Establishment *</label>
+                        <select id="cafeType">
+                            <option value="">Select type...</option>
+                            <option value="Coffee Shop">Coffee Shop</option>
+                            <option value="Café">Café</option>
+                            <option value="Snack Bar">Snack Bar</option>
+                            <option value="Dessert Café">Dessert Café</option>
+                            <option value="Juice Bar">Juice Bar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Theme & Concept *</label>
+                        <textarea id="theme" placeholder="Describe the look and atmosphere..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Location *</label>
+                        <input type="text" id="location" placeholder="e.g., Room 301">
+                    </div>
+                    <div class="form-group">
+                        <label>Operating Hours *</label>
+                        <input type="text" id="hours" placeholder="e.g., 9:00 AM - 3:00 PM">
+                    </div>
+                    <div class="form-group">
+                        <label>Unique Selling Proposition *</label>
+                        <textarea id="usp" placeholder="What makes your café different?"></textarea>
+                    </div>
+                    <div class="validation-msg" id="val2"></div>
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="prevSection(2)">← Previous</button>
+                        <button class="btn-primary" onclick="nextSection(2)">Next →</button>
+                    </div>
+                </div>
+
+                <!-- SECTION 3 -->
+                <div class="section" id="section3">
+                    <h3>3. Products & Services</h3>
+                    <div class="form-group">
+                        <label>Menu Items * (at least 5)</label>
+                        <div class="menu-builder" id="menuBuilder">
+                            <div class="menu-item">
+                                <input type="text" placeholder="Item name" class="item-name">
+                                <input type="number" placeholder="Price ₱" class="item-price" min="0">
+                                <select class="item-cat">
+                                    <option value="Beverage">Beverage</option>
+                                    <option value="Snack">Snack</option>
+                                    <option value="Pastry">Pastry</option>
+                                    <option value="Dessert">Dessert</option>
+                                </select>
+                                <button class="remove-btn" onclick="removeItem(this)" style="visibility:hidden">✕</button>
+                            </div>
+                        </div>
+                        <button class="add-item-btn" onclick="addItem()">+ Add Item</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Service Style *</label>
+                        <select id="serviceStyle">
+                            <option value="">Select style...</option>
+                            <option value="Counter Service">Counter Service</option>
+                            <option value="Table Service">Table Service</option>
+                            <option value="Self-Serve">Self-Serve</option>
+                            <option value="Hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Signature Item *</label>
+                        <input type="text" id="signature" placeholder="Your café's specialty">
+                    </div>
+                    <div class="validation-msg" id="val3"></div>
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="prevSection(3)">← Previous</button>
+                        <button class="btn-primary" onclick="nextSection(3)">Next →</button>
+                    </div>
+                </div>
+
+                <!-- SECTION 4 -->
+                <div class="section" id="section4">
+                    <h3>4. Market Analysis</h3>
+                    <div class="form-group">
+                        <label>Target Customers * (select at least 2)</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" class="target" value="Parents"> Parents & Guardians</label>
+                            <label class="checkbox-item"><input type="checkbox" class="target" value="Students"> Students</label>
+                            <label class="checkbox-item"><input type="checkbox" class="target" value="Teachers"> Teachers & Staff</label>
+                            <label class="checkbox-item"><input type="checkbox" class="target" value="Visitors"> School Visitors</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer Needs *</label>
+                        <textarea id="customerNeeds" placeholder="What do your customers want?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Expected Customers *</label>
+                        <input type="number" id="expectedCustomers" min="1" placeholder="e.g., 50">
+                    </div>
+                    <div class="form-group">
+                        <label>Market Opportunity *</label>
+                        <textarea id="marketOpportunity" placeholder="Why will your café be successful?"></textarea>
+                    </div>
+                    <div class="validation-msg" id="val4"></div>
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="prevSection(4)">← Previous</button>
+                        <button class="btn-primary" onclick="nextSection(4)">Next →</button>
+                    </div>
+                </div>
+
+                <!-- SECTION 5 -->
+                <div class="section" id="section5">
+                    <h3>5. Marketing Plan</h3>
+                    <div class="form-group">
+                        <label>Promotional Strategies * (select at least 3)</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" class="promo" value="Flyers"> Flyers & Posters</label>
+                            <label class="checkbox-item"><input type="checkbox" class="promo" value="Social Media"> Social Media</label>
+                            <label class="checkbox-item"><input type="checkbox" class="promo" value="Word of Mouth"> Word of Mouth</label>
+                            <label class="checkbox-item"><input type="checkbox" class="promo" value="Announcements"> School Announcements</label>
+                            <label class="checkbox-item"><input type="checkbox" class="promo" value="Email"> Email/Messaging</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Branding Elements *</label>
+                        <textarea id="branding" placeholder="Describe your logo, colors, style..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Ticketing System *</label>
+                        <select id="ticketing">
+                            <option value="">Select method...</option>
+                            <option value="Pre-sale">Pre-sale Only</option>
+                            <option value="Door">At the Door</option>
+                            <option value="Both">Both</option>
+                            <option value="Reservation">Reservation</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ticket Price *</label>
+                        <input type="number" id="ticketPrice" min="0" placeholder="₱">
+                    </div>
+                    <div class="form-group">
+                        <label>Promotional Timeline *</label>
+                        <textarea id="promoTimeline" placeholder="Week 1: Design posters..."></textarea>
+                    </div>
+                    <div class="validation-msg" id="val5"></div>
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="prevSection(5)">← Previous</button>
+                        <button class="btn-primary" onclick="nextSection(5)">Next →</button>
+                    </div>
+                </div>
+
+                <!-- SECTION 6 -->
+                <div class="section" id="section6">
+                    <h3>6. Operations Plan</h3>
+                    <div class="form-group">
+                        <label>Team Roles *</label>
+                        <textarea id="teamRoles" placeholder="Manager: 2 members&#10;Cashier: 2 members..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Equipment & Supplies *</label>
+                        <textarea id="equipment" placeholder="List everything you need..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Setup Procedure *</label>
+                        <textarea id="setupProc" placeholder="Step-by-step setup..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Service Workflow *</label>
+                        <textarea id="workflow" placeholder="Customer journey..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Cleanup Plan *</label>
+                        <textarea id="cleanup" placeholder="How will you clean up?"></textarea>
+                    </div>
+                    <div class="validation-msg" id="val6"></div>
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="prevSection(6)">← Previous</button>
+                        <button class="btn-primary" onclick="nextSection(6)">Next →</button>
+                    </div>
+                </div>
+
+                <!-- SECTION 7 -->
+                <div class="section" id="section7">
+                    <h3>7. Financial Plan</h3>
+                    <div class="form-group">
+                        <label>Startup Costs *</label>
+                        <textarea id="startupCosts" placeholder="Ingredients: ₱2,000&#10;Cups: ₱500..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Startup Investment *</label>
+                        <input type="number" id="totalStartup" min="0" placeholder="₱">
+                    </div>
+                    <div class="form-group">
+                        <label>Projected Revenue *</label>
+                        <textarea id="projectedRevenue" placeholder="Calculate expected income..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Expected Revenue *</label>
+                        <input type="number" id="totalRevenue" min="0" placeholder="₱">
+                    </div>
+                    <div class="form-group">
+                        <label>Projected Profit *</label>
+                        <input type="number" id="profit" min="0" placeholder="₱">
+                    </div>
+                    <div class="form-group">
+                        <label>Funding Sources *</label>
+                        <textarea id="funding" placeholder="Where will you get startup money?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Pricing Strategy *</label>
+                        <textarea id="pricingStrategy" placeholder="How did you decide on prices?"></textarea>
+                    </div>
+                    <div class="validation-msg" id="val7"></div>
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="prevSection(7)">← Previous</button>
+                        <button class="btn-primary" onclick="reviewPlan()">Review Plan →</button>
+                    </div>
+                </div>
+
+                <!-- REVIEW SECTION -->
+                <div class="section" id="reviewSection">
+                    <h3>📊 Business Plan Summary</h3>
+                    <p style="margin-bottom:1rem;">Review your plan below. Go back to make changes if needed.</p>
+                    <div id="summaryContent"></div>
+                    <div id="submitError" class="error-msg" style="display:none;"></div>
+                    <div class="button-group" id="reviewButtons">
+                        <button class="btn-secondary" onclick="prevSection(8)">← Edit</button>
+                        <button class="btn-success" id="submitBtn" onclick="submitPlan()">✓ Submit Plan</button>
+                    </div>
+                </div>
+
+                <!-- COMPLETION SECTION -->
+                <div class="section" id="completionSection">
+                    <div class="completion-card">
+                        <div class="completion-icon">🎉</div>
+                        <h2>Congratulations!</h2>
+                        <p>Your business plan has been submitted successfully!</p>
+                        <div class="success-msg" style="text-align:left;margin:1rem 0;">
+                            <strong>Next Steps:</strong>
+                            <ul style="margin:0.5rem 0 0 1.5rem;">
+                                <li>Review your plan with your team</li>
+                                <li>Wait for feedback from your teacher</li>
+                                <li>Prepare for the pitching session</li>
+                            </ul>
+                        </div>
+                        <button class="btn-primary" onclick="downloadPlan()" style="margin-top:1rem;">📥 Download Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ========== CONFIGURATION ==========
+// IMPORTANT: Replace this URL with your Google Apps Script Web App URL
+const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+// ========== STATE ==========
+let currentSection = 1;
+let currentUser = null;
+let isSubmitted = false;
+let lastSaved = null;
+const plan = {};
+
+// ========== UTILITIES ==========
+function showLoading(text) {
+    document.getElementById('loadingText').textContent = text || 'Loading...';
+    document.getElementById('loading').classList.add('show');
+}
+function hideLoading() {
+    document.getElementById('loading').classList.remove('show');
+}
+function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast show ' + (type || 'success');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+function $(id) { return document.getElementById(id); }
+
+// ========== LOGIN ==========
+async function handleLogin() {
+    const studentId = $('loginId').value.trim();
+    const studentName = $('loginName').value.trim();
+    
+    if (!studentId || !studentName) {
+        $('loginError').textContent = 'Please enter both Student ID and Name.';
+        $('loginError').style.display = 'block';
+        return;
+    }
+    
+    $('loginError').style.display = 'none';
+    $('loginBtn').disabled = true;
+    $('loginBtn').textContent = 'Loading...';
+    showLoading('Loading your progress...');
+    
+    try {
+        const url = API_URL + '?action=load&studentId=' + encodeURIComponent(studentId) + '&studentName=' + encodeURIComponent(studentName);
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        currentUser = { studentId, studentName };
+        isSubmitted = result.isSubmitted || false;
+        
+        if (result.found && result.data) {
+            const savedData = JSON.parse(result.data);
+            Object.assign(plan, savedData);
+            loadFormData(savedData);
+            lastSaved = result.lastSaved;
+            showToast('Welcome back! Progress loaded.');
+        } else if (isSubmitted) {
+            showToast('You have already submitted.');
+        } else {
+            showToast('Welcome! Start your plan.');
+        }
+        
+        $('loginScreen').classList.remove('active');
+        $('mainContent').classList.add('active');
+        $('userName').textContent = studentName;
+        
+        if (isSubmitted) {
+            $('submittedBanner').style.display = 'block';
+            $('saveBtn').style.display = 'none';
+            disableInputs();
+        }
+        
+        updateSaveStatus();
+        updateProgress();
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        currentUser = { studentId, studentName };
+        $('loginScreen').classList.remove('active');
+        $('mainContent').classList.add('active');
+        $('userName').textContent = studentName;
+        showToast('Started (offline mode)');
+    } finally {
+        hideLoading();
+        $('loginBtn').disabled = false;
+        $('loginBtn').textContent = 'Start / Continue My Plan';
+    }
+}
+
+function logout() {
+    if (confirm('Logout? Make sure you saved your progress!')) {
+        location.reload();
+    }
+}
+
+function disableInputs() {
+    document.querySelectorAll('#mainContent input, #mainContent textarea, #mainContent select').forEach(el => el.disabled = true);
+    $('submitBtn').style.display = 'none';
+}
+
+function loadFormData(data) {
+    if (data.cafeName) $('cafeName').value = data.cafeName;
+    if (data.mission) $('mission').value = data.mission;
+    if (data.briefDesc) $('briefDesc').value = data.briefDesc;
+    if (data.mainGoal) $('mainGoal').value = data.mainGoal;
+    if (data.cafeType) $('cafeType').value = data.cafeType;
+    if (data.theme) $('theme').value = data.theme;
+    if (data.location) $('location').value = data.location;
+    if (data.hours) $('hours').value = data.hours;
+    if (data.usp) $('usp').value = data.usp;
+    if (data.serviceStyle) $('serviceStyle').value = data.serviceStyle;
+    if (data.signature) $('signature').value = data.signature;
+    if (data.customerNeeds) $('customerNeeds').value = data.customerNeeds;
+    if (data.expectedCustomers) $('expectedCustomers').value = data.expectedCustomers;
+    if (data.marketOpportunity) $('marketOpportunity').value = data.marketOpportunity;
+    if (data.branding) $('branding').value = data.branding;
+    if (data.ticketing) $('ticketing').value = data.ticketing;
+    if (data.ticketPrice) $('ticketPrice').value = data.ticketPrice;
+    if (data.promoTimeline) $('promoTimeline').value = data.promoTimeline;
+    if (data.teamRoles) $('teamRoles').value = data.teamRoles;
+    if (data.equipment) $('equipment').value = data.equipment;
+    if (data.setupProc) $('setupProc').value = data.setupProc;
+    if (data.workflow) $('workflow').value = data.workflow;
+    if (data.cleanup) $('cleanup').value = data.cleanup;
+    if (data.startupCosts) $('startupCosts').value = data.startupCosts;
+    if (data.totalStartup) $('totalStartup').value = data.totalStartup;
+    if (data.projectedRevenue) $('projectedRevenue').value = data.projectedRevenue;
+    if (data.totalRevenue) $('totalRevenue').value = data.totalRevenue;
+    if (data.profit) $('profit').value = data.profit;
+    if (data.funding) $('funding').value = data.funding;
+    if (data.pricingStrategy) $('pricingStrategy').value = data.pricingStrategy;
+    
+    if (data.menuItems && data.menuItems.length > 0) {
+        const builder = $('menuBuilder');
+        builder.innerHTML = '';
+        data.menuItems.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = 'menu-item';
+            div.innerHTML = `
+                <input type="text" placeholder="Item name" class="item-name" value="${item.name || ''}">
+                <input type="number" placeholder="Price ₱" class="item-price" min="0" value="${item.price || ''}">
+                <select class="item-cat">
+                    <option value="Beverage" ${item.category === 'Beverage' ? 'selected' : ''}>Beverage</option>
+                    <option value="Snack" ${item.category === 'Snack' ? 'selected' : ''}>Snack</option>
+                    <option value="Pastry" ${item.category === 'Pastry' ? 'selected' : ''}>Pastry</option>
+                    <option value="Dessert" ${item.category === 'Dessert' ? 'selected' : ''}>Dessert</option>
+                </select>
+                <button class="remove-btn" onclick="removeItem(this)" ${i === 0 ? 'style="visibility:hidden"' : ''}>✕</button>
+            `;
+            builder.appendChild(div);
+        });
+    }
+    
+    if (data.targetCustomers) {
+        data.targetCustomers.forEach(t => {
+            const cb = document.querySelector('.target[value="' + t + '"]');
+            if (cb) cb.checked = true;
+        });
+    }
+    if (data.promoStrategies) {
+        data.promoStrategies.forEach(p => {
+            const cb = document.querySelector('.promo[value="' + p + '"]');
+            if (cb) cb.checked = true;
+        });
+    }
+}
+
+// ========== SAVE ==========
+function collectData() {
+    const data = {};
+    data.cafeName = $('cafeName').value;
+    data.mission = $('mission').value;
+    data.briefDesc = $('briefDesc').value;
+    data.mainGoal = $('mainGoal').value;
+    data.cafeType = $('cafeType').value;
+    data.theme = $('theme').value;
+    data.location = $('location').value;
+    data.hours = $('hours').value;
+    data.usp = $('usp').value;
+    
+    const menuItems = [];
+    document.querySelectorAll('.menu-item').forEach(item => {
+        const name = item.querySelector('.item-name').value.trim();
+        const price = item.querySelector('.item-price').value;
+        const category = item.querySelector('.item-cat').value;
+        if (name || price) menuItems.push({ name, price, category });
+    });
+    data.menuItems = menuItems;
+    data.serviceStyle = $('serviceStyle').value;
+    data.signature = $('signature').value;
+    
+    data.targetCustomers = Array.from(document.querySelectorAll('.target:checked')).map(c => c.value);
+    data.customerNeeds = $('customerNeeds').value;
+    data.expectedCustomers = $('expectedCustomers').value;
+    data.marketOpportunity = $('marketOpportunity').value;
+    
+    data.promoStrategies = Array.from(document.querySelectorAll('.promo:checked')).map(c => c.value);
+    data.branding = $('branding').value;
+    data.ticketing = $('ticketing').value;
+    data.ticketPrice = $('ticketPrice').value;
+    data.promoTimeline = $('promoTimeline').value;
+    
+    data.teamRoles = $('teamRoles').value;
+    data.equipment = $('equipment').value;
+    data.setupProc = $('setupProc').value;
+    data.workflow = $('workflow').value;
+    data.cleanup = $('cleanup').value;
+    
+    data.startupCosts = $('startupCosts').value;
+    data.totalStartup = $('totalStartup').value;
+    data.projectedRevenue = $('projectedRevenue').value;
+    data.totalRevenue = $('totalRevenue').value;
+    data.profit = $('profit').value;
+    data.funding = $('funding').value;
+    data.pricingStrategy = $('pricingStrategy').value;
+    
+    return data;
+}
+
+async function saveProgress() {
+    if (!currentUser || isSubmitted) return;
+    
+    const saveBtn = $('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    
+    const data = collectData();
+    Object.assign(plan, data);
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'save');
+        formData.append('studentId', currentUser.studentId);
+        formData.append('studentName', currentUser.studentName);
+        formData.append('data', JSON.stringify(data));
+        
+        const response = await fetch(API_URL, { method: 'POST', body: formData });
+        const result = await response.json();
+        
+        if (result.success) {
+            lastSaved = result.savedAt;
+            updateSaveStatus();
+            showToast('Progress saved!');
+        } else {
+            showToast('Save failed: ' + (result.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        showToast('Could not save. Try again.', 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save';
+    }
+}
+
+function updateSaveStatus() {
+    const el = $('saveStatus');
+    if (isSubmitted) {
+        el.textContent = '✅ Submitted';
+    } else if (lastSaved) {
+        el.textContent = 'Saved: ' + new Date(lastSaved).toLocaleString();
+    } else {
+        el.textContent = 'Not saved yet';
+    }
+}
+
+// ========== NAVIGATION ==========
+function updateProgress() {
+    const pct = ((currentSection - 1) / 7) * 100;
+    $('progressFill').style.width = pct + '%';
+    
+    document.querySelectorAll('.step').forEach((step, i) => {
+        const num = i + 1;
+        step.classList.remove('active', 'completed');
+        if (num < currentSection) step.classList.add('completed');
+        else if (num === currentSection) step.classList.add('active');
+    });
+}
+
+function showValidation(num, msg) {
+    const el = $('val' + num);
+    if (el) {
+        el.textContent = msg;
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 4000);
+    }
+}
+
+function validateSection(num) {
+    if (isSubmitted) return true;
+    
+    switch(num) {
+        case 1:
+            if (!$('cafeName').value.trim()) { showValidation(1, 'Enter café name'); return false; }
+            if (!$('mission').value.trim()) { showValidation(1, 'Enter mission statement'); return false; }
+            if (!$('briefDesc').value.trim()) { showValidation(1, 'Enter description'); return false; }
+            if (!$('mainGoal').value.trim()) { showValidation(1, 'Enter main goal'); return false; }
+            break;
+        case 2:
+            if (!$('cafeType').value) { showValidation(2, 'Select establishment type'); return false; }
+            if (!$('theme').value.trim()) { showValidation(2, 'Enter theme'); return false; }
+            if (!$('location').value.trim()) { showValidation(2, 'Enter location'); return false; }
+            if (!$('hours').value.trim()) { showValidation(2, 'Enter hours'); return false; }
+            if (!$('usp').value.trim()) { showValidation(2, 'Enter USP'); return false; }
+            break;
+        case 3:
+            let validItems = 0;
+            document.querySelectorAll('.menu-item').forEach(item => {
+                if (item.querySelector('.item-name').value.trim() && item.querySelector('.item-price').value) validItems++;
+            });
+            if (validItems < 5) { showValidation(3, 'Add at least 5 menu items'); return false; }
+            if (!$('serviceStyle').value) { showValidation(3, 'Select service style'); return false; }
+            if (!$('signature').value.trim()) { showValidation(3, 'Enter signature item'); return false; }
+            break;
+        case 4:
+            if (document.querySelectorAll('.target:checked').length < 2) { showValidation(4, 'Select at least 2 target customers'); return false; }
+            if (!$('customerNeeds').value.trim()) { showValidation(4, 'Enter customer needs'); return false; }
+            if (!$('expectedCustomers').value) { showValidation(4, 'Enter expected customers'); return false; }
+            if (!$('marketOpportunity').value.trim()) { showValidation(4, 'Enter market opportunity'); return false; }
+            break;
+        case 5:
+            if (document.querySelectorAll('.promo:checked').length < 3) { showValidation(5, 'Select at least 3 strategies'); return false; }
+            if (!$('branding').value.trim()) { showValidation(5, 'Enter branding'); return false; }
+            if (!$('ticketing').value) { showValidation(5, 'Select ticketing'); return false; }
+            if (!$('ticketPrice').value) { showValidation(5, 'Enter ticket price'); return false; }
+            if (!$('promoTimeline').value.trim()) { showValidation(5, 'Enter timeline'); return false; }
+            break;
+        case 6:
+            if (!$('teamRoles').value.trim()) { showValidation(6, 'Enter team roles'); return false; }
+            if (!$('equipment').value.trim()) { showValidation(6, 'Enter equipment'); return false; }
+            if (!$('setupProc').value.trim()) { showValidation(6, 'Enter setup procedure'); return false; }
+            if (!$('workflow').value.trim()) { showValidation(6, 'Enter workflow'); return false; }
+            if (!$('cleanup').value.trim()) { showValidation(6, 'Enter cleanup plan'); return false; }
+            break;
+        case 7:
+            if (!$('startupCosts').value.trim()) { showValidation(7, 'Enter startup costs'); return false; }
+            if (!$('totalStartup').value) { showValidation(7, 'Enter total startup'); return false; }
+            if (!$('projectedRevenue').value.trim()) { showValidation(7, 'Enter projected revenue'); return false; }
+            if (!$('totalRevenue').value) { showValidation(7, 'Enter total revenue'); return false; }
+            if (!$('profit').value) { showValidation(7, 'Enter profit'); return false; }
+            if (!$('funding').value.trim()) { showValidation(7, 'Enter funding sources'); return false; }
+            if (!$('pricingStrategy').value.trim()) { showValidation(7, 'Enter pricing strategy'); return false; }
+            break;
+    }
+    return true;
+}
+
+function nextSection(from) {
+    if (!validateSection(from)) return;
+    $('section' + from).classList.remove('active');
+    currentSection = from + 1;
+    $('section' + currentSection).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function prevSection(from) {
+    if (from === 8) {
+        $('reviewSection').classList.remove('active');
+        currentSection = 7;
+    } else {
+        $('section' + from).classList.remove('active');
+        currentSection = from - 1;
+    }
+    $('section' + currentSection).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ========== MENU ==========
+function addItem() {
+    if (isSubmitted) return;
+    const builder = $('menuBuilder');
+    const div = document.createElement('div');
+    div.className = 'menu-item';
+    div.innerHTML = `
+        <input type="text" placeholder="Item name" class="item-name">
+        <input type="number" placeholder="Price ₱" class="item-price" min="0">
+        <select class="item-cat">
+            <option value="Beverage">Beverage</option>
+            <option value="Snack">Snack</option>
+            <option value="Pastry">Pastry</option>
+            <option value="Dessert">Dessert</option>
+        </select>
+        <button class="remove-btn" onclick="removeItem(this)">✕</button>
+    `;
+    builder.appendChild(div);
+}
+
+function removeItem(btn) {
+    if (isSubmitted) return;
+    if ($('menuBuilder').querySelectorAll('.menu-item').length > 1) {
+        btn.closest('.menu-item').remove();
+    }
+}
+
+// ========== REVIEW & SUBMIT ==========
+function reviewPlan() {
+    if (!validateSection(7)) return;
+    
+    const data = collectData();
+    Object.assign(plan, data);
+    
+    let html = `
+        <div class="summary-section" style="background:#E3F2FD;border:2px solid var(--secondary);">
+            <h4>📝 Student Info</h4>
+            <div class="summary-item"><span class="summary-label">ID:</span> ${currentUser.studentId}</div>
+            <div class="summary-item"><span class="summary-label">Name:</span> ${currentUser.studentName}</div>
+        </div>
+        <div class="summary-section">
+            <h4>1. Executive Summary</h4>
+            <div class="summary-item"><span class="summary-label">Café:</span> ${plan.cafeName}</div>
+            <div class="summary-item"><span class="summary-label">Mission:</span> ${plan.mission}</div>
+            <div class="summary-item"><span class="summary-label">Goal:</span> ${plan.mainGoal}</div>
+        </div>
+        <div class="summary-section">
+            <h4>2. Business Description</h4>
+            <div class="summary-item"><span class="summary-label">Type:</span> ${plan.cafeType}</div>
+            <div class="summary-item"><span class="summary-label">Theme:</span> ${plan.theme}</div>
+            <div class="summary-item"><span class="summary-label">Location:</span> ${plan.location}</div>
+        </div>
+        <div class="summary-section">
+            <h4>3. Products</h4>
+            <div class="summary-item"><span class="summary-label">Menu (${plan.menuItems.length} items):</span><br>
+            ${plan.menuItems.filter(i=>i.name).map(i => i.name + ' - ₱' + i.price).join('<br>')}</div>
+            <div class="summary-item"><span class="summary-label">Signature:</span> ${plan.signature}</div>
+        </div>
+        <div class="summary-section">
+            <h4>4. Market</h4>
+            <div class="summary-item"><span class="summary-label">Targets:</span> ${plan.targetCustomers.join(', ')}</div>
+            <div class="summary-item"><span class="summary-label">Expected:</span> ${plan.expectedCustomers} customers</div>
+        </div>
+        <div class="summary-section">
+            <h4>5. Marketing</h4>
+            <div class="summary-item"><span class="summary-label">Strategies:</span> ${plan.promoStrategies.join(', ')}</div>
+            <div class="summary-item"><span class="summary-label">Ticket:</span> ₱${plan.ticketPrice}</div>
+        </div>
+        <div class="summary-section">
+            <h4>7. Financial</h4>
+            <div class="summary-item"><span class="summary-label">Startup:</span> ₱${plan.totalStartup}</div>
+            <div class="summary-item"><span class="summary-label">Revenue:</span> ₱${plan.totalRevenue}</div>
+            <div class="summary-item"><span class="summary-label">Profit:</span> ₱${plan.profit}</div>
+        </div>
+    `;
+    
+    $('summaryContent').innerHTML = html;
+    
+    if (isSubmitted) {
+        $('reviewButtons').innerHTML = `
+            <button class="btn-secondary" onclick="prevSection(8)">← Back</button>
+            <button class="btn-primary" onclick="downloadPlan()">📥 Download</button>
+        `;
+    }
+    
+    $('section7').classList.remove('active');
+    $('reviewSection').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function submitPlan() {
+    if (isSubmitted) return;
+    if (!confirm('Submit your plan? You cannot edit after submitting.')) return;
+    
+    const submitBtn = $('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    showLoading('Submitting your plan...');
+    
+    const menuStr = plan.menuItems.filter(i=>i.name).map(i => i.name + ': ₱' + i.price + ' (' + i.category + ')').join('; ');
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'submit');
+        formData.append('studentId', currentUser.studentId);
+        formData.append('studentName', currentUser.studentName);
+        formData.append('cafeName', plan.cafeName || '');
+        formData.append('mission', plan.mission || '');
+        formData.append('briefDesc', plan.briefDesc || '');
+        formData.append('mainGoal', plan.mainGoal || '');
+        formData.append('cafeType', plan.cafeType || '');
+        formData.append('theme', plan.theme || '');
+        formData.append('location', plan.location || '');
+        formData.append('hours', plan.hours || '');
+        formData.append('usp', plan.usp || '');
+        formData.append('menuItems', menuStr);
+        formData.append('serviceStyle', plan.serviceStyle || '');
+        formData.append('signature', plan.signature || '');
+        formData.append('targetCustomers', (plan.targetCustomers || []).join(', '));
+        formData.append('customerNeeds', plan.customerNeeds || '');
+        formData.append('expectedCustomers', plan.expectedCustomers || '');
+        formData.append('marketOpportunity', plan.marketOpportunity || '');
+        formData.append('promoStrategies', (plan.promoStrategies || []).join(', '));
+        formData.append('branding', plan.branding || '');
+        formData.append('ticketing', plan.ticketing || '');
+        formData.append('ticketPrice', plan.ticketPrice || '');
+        formData.append('promoTimeline', plan.promoTimeline || '');
+        formData.append('teamRoles', plan.teamRoles || '');
+        formData.append('equipment', plan.equipment || '');
+        formData.append('setupProc', plan.setupProc || '');
+        formData.append('workflow', plan.workflow || '');
+        formData.append('cleanup', plan.cleanup || '');
+        formData.append('startupCosts', plan.startupCosts || '');
+        formData.append('totalStartup', plan.totalStartup || '');
+        formData.append('projectedRevenue', plan.projectedRevenue || '');
+        formData.append('totalRevenue', plan.totalRevenue || '');
+        formData.append('profit', plan.profit || '');
+        formData.append('funding', plan.funding || '');
+        formData.append('pricingStrategy', plan.pricingStrategy || '');
+        
+        const response = await fetch(API_URL, { method: 'POST', body: formData });
+        const result = await response.json();
+        
+        if (result.success) {
+            isSubmitted = true;
+            $('reviewSection').classList.remove('active');
+            $('completionSection').classList.add('active');
+            $('progressFill').style.width = '100%';
+            document.querySelectorAll('.step').forEach(s => { s.classList.remove('active'); s.classList.add('completed'); });
+            showToast('Submitted successfully!');
+        } else {
+            $('submitError').textContent = result.error || 'Submission failed';
+            $('submitError').style.display = 'block';
+            showToast(result.error || 'Failed', 'error');
+        }
+    } catch (error) {
+        console.error('Submit error:', error);
+        $('submitError').textContent = 'Network error. Try again.';
+        $('submitError').style.display = 'block';
+        showToast('Network error', 'error');
+    } finally {
+        hideLoading();
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✓ Submit Plan';
+    }
+}
+
+function downloadPlan() {
+    let text = 'BUSINESS PLAN: ' + plan.cafeName + '\n';
+    text += '='.repeat(50) + '\n\n';
+    text += 'Student ID: ' + currentUser.studentId + '\n';
+    text += 'Student Name: ' + currentUser.studentName + '\n\n';
+    text += '1. EXECUTIVE SUMMARY\n' + '-'.repeat(30) + '\n';
+    text += 'Cafe Name: ' + plan.cafeName + '\n';
+    text += 'Mission: ' + plan.mission + '\n';
+    text += 'Description: ' + plan.briefDesc + '\n';
+    text += 'Goal: ' + plan.mainGoal + '\n\n';
+    text += '2. BUSINESS DESCRIPTION\n' + '-'.repeat(30) + '\n';
+    text += 'Type: ' + plan.cafeType + '\n';
+    text += 'Theme: ' + plan.theme + '\n';
+    text += 'Location: ' + plan.location + '\n';
+    text += 'Hours: ' + plan.hours + '\n';
+    text += 'USP: ' + plan.usp + '\n\n';
+    text += '3. PRODUCTS\n' + '-'.repeat(30) + '\n';
+    text += 'Menu Items:\n';
+    plan.menuItems.filter(i=>i.name).forEach(i => { text += '  - ' + i.name + ': P' + i.price + '\n'; });
+    text += 'Service Style: ' + plan.serviceStyle + '\n';
+    text += 'Signature Item: ' + plan.signature + '\n\n';
+    text += '7. FINANCIAL\n' + '-'.repeat(30) + '\n';
+    text += 'Startup Costs: P' + plan.totalStartup + '\n';
+    text += 'Expected Revenue: P' + plan.totalRevenue + '\n';
+    text += 'Projected Profit: P' + plan.profit + '\n';
+    
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = plan.cafeName.replace(/\s+/g, '_') + '_BusinessPlan.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Initialize
+updateProgress();
+</script>
+</body>
+</html>

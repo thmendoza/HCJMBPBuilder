@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Business Plan Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: #F0F2F5; min-height: 100vh; color: #333; }
+        .navbar {
+            background: linear-gradient(135deg, #004E89 0%, #003d6e 100%);
+            padding: 1rem 2rem; color: white;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+        .navbar h1 { font-family: 'Archivo Black', sans-serif; font-size: 1.5rem; }
+        .navbar-btns { display: flex; gap: 0.5rem; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-light { background: white; color: #004E89; }
+        .btn-light:hover { background: #f0f0f0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: white; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-card .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .stat-card .number { font-family: 'Archivo Black', sans-serif; font-size: 2rem; color: #004E89; }
+        .stat-card .label { color: #666; }
+        .stat-card.success .number { color: #06D6A0; }
+        .stat-card.warning .number { color: #FFC107; }
+        .main-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
+        .card-header { background: #f8f9fa; padding: 1rem 1.5rem; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .card-header h2 { font-family: 'Archivo Black', sans-serif; color: #004E89; font-size: 1.2rem; }
+        .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .search-box, .filter-select { padding: 0.5rem 1rem; border: 2px solid #dee2e6; border-radius: 8px; font-family: 'DM Sans', sans-serif; }
+        .search-box:focus, .filter-select:focus { outline: none; border-color: #004E89; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background: #f8f9fa; font-weight: 700; color: #004E89; }
+        tr:hover { background: #f8f9fa; }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .badge.submitted { background: #D1F4E0; color: #0F5132; }
+        .badge.progress { background: #FFF3CD; color: #856404; }
+        .action-btn { background: #004E89; color: white; padding: 0.4rem 0.8rem; border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+        .action-btn:hover { background: #003d6e; }
+        .loading { text-align: center; padding: 3rem; color: #666; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #E0E0E0; border-top-color: #004E89; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty { text-align: center; padding: 3rem; color: #666; }
+        .empty .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: flex-start; padding: 2rem; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 12px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { background: linear-gradient(135deg, #004E89 0%, #003d6e 100%); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
+        .modal-header h2 { font-family: 'Archivo Black', sans-serif; font-size: 1.2rem; }
+        .close-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
+        .modal-body { padding: 1.5rem; }
+        .plan-section { background: #f8f9fa; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+        .plan-section h3 { color: #004E89; font-size: 1rem; margin-bottom: 0.75rem; border-bottom: 2px solid #004E89; padding-bottom: 0.5rem; }
+        .plan-item { margin-bottom: 0.5rem; }
+        .plan-label { font-weight: 700; }
+        .plan-value { color: #495057; white-space: pre-wrap; }
+        .modal-footer { padding: 1rem 1.5rem; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 0.5rem; }
+        .updated { text-align: center; color: #666; font-size: 0.9rem; margin-top: 1rem; }
+        @media (max-width: 768px) { .container { padding: 1rem; } .navbar { flex-direction: column; } th, td { padding: 0.5rem; font-size: 0.85rem; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>📊 Teacher Dashboard</h1>
+        <div class="navbar-btns">
+            <button class="btn btn-light" onclick="loadData()">🔄 Refresh</button>
+            <button class="btn btn-light" onclick="exportCSV()">📥 Export CSV</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card"><div class="icon">👥</div><div class="number" id="totalCount">0</div><div class="label">Total Students</div></div>
+            <div class="stat-card success"><div class="icon">✅</div><div class="number" id="submittedCount">0</div><div class="label">Submitted</div></div>
+            <div class="stat-card warning"><div class="icon">📝</div><div class="number" id="progressCount">0</div><div class="label">In Progress</div></div>
+            <div class="stat-card"><div class="icon">📊</div><div class="number" id="rateCount">0%</div><div class="label">Completion Rate</div></div>
+        </div>
+
+        <div class="main-card">
+            <div class="card-header">
+                <h2>📋 Student Business Plans</h2>
+                <div class="filters">
+                    <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search..." oninput="filterTable()">
+                    <select class="filter-select" id="statusFilter" onchange="filterTable()">
+                        <option value="all">All Status</option>
+                        <option value="Submitted">Submitted</option>
+                        <option value="In Progress">In Progress</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loadingState" class="loading"><div class="spinner"></div><p>Loading student data...</p></div>
+            <div id="emptyState" class="empty" style="display:none;"><div class="icon">📭</div><h3>No students found</h3><p>Students will appear here once they start.</p></div>
+
+            <table id="dataTable" style="display:none;">
+                <thead><tr><th>Student ID</th><th>Name</th><th>Café Name</th><th>Status</th><th>Last Updated</th><th>Action</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            <p class="updated" id="lastUpdated"></p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header"><h2 id="modalTitle">Business Plan</h2><button class="close-btn" onclick="closeModal()">&times;</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer"><button class="btn btn-light" onclick="downloadPlan()">📥 Download</button><button class="btn btn-light" onclick="closeModal()">Close</button></div>
+        </div>
+    </div>
+
+<script>
+// ⚠️ IMPORTANT: Replace this URL with your Google Apps Script Web App URL
+const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+let allStudents = [];
+let currentPlan = null;
+
+async function loadData() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    
+    try {
+        const [subRes, draftRes] = await Promise.all([
+            fetch(API_URL + '?action=getSubmissions').then(r => r.json()).catch(() => ({ success: false })),
+            fetch(API_URL + '?action=getDrafts').then(r => r.json()).catch(() => ({ success: false }))
+        ]);
+        
+        allStudents = [];
+        
+        if (subRes.success && subRes.data) {
+            subRes.data.forEach(row => {
+                allStudents.push({
+                    timestamp: row[0], studentId: row[1], studentName: row[2], cafeName: row[3] || 'Not set', status: 'Submitted',
+                    data: { cafeName: row[3], mission: row[4], briefDesc: row[5], mainGoal: row[6], cafeType: row[7], theme: row[8], location: row[9], hours: row[10], usp: row[11], menuItems: row[12], serviceStyle: row[13], signature: row[14], targetCustomers: row[15], customerNeeds: row[16], expectedCustomers: row[17], marketOpportunity: row[18], promoStrategies: row[19], branding: row[20], ticketing: row[21], ticketPrice: row[22], promoTimeline: row[23], teamRoles: row[24], equipment: row[25], setupProc: row[26], workflow: row[27], cleanup: row[28], startupCosts: row[29], totalStartup: row[30], projectedRevenue: row[31], totalRevenue: row[32], profit: row[33], funding: row[34], pricingStrategy: row[35] }
+                });
+            });
+        }
+        
+        if (draftRes.success && draftRes.data) {
+            draftRes.data.forEach(row => {
+                const exists = allStudents.some(s => String(s.studentId) === String(row[0]) && s.studentName.toLowerCase() === String(row[1]).toLowerCase() && s.status === 'Submitted');
+                if (!exists) {
+                    let draftData = {}; try { draftData = JSON.parse(row[3] || '{}'); } catch(e) {}
+                    allStudents.push({ timestamp: row[2], studentId: row[0], studentName: row[1], cafeName: draftData.cafeName || 'Not set', status: 'In Progress', data: draftData });
+                }
+            });
+        }
+        
+        renderTable();
+        updateStats();
+        document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+    } catch (error) {
+        console.error('Load error:', error);
+        document.getElementById('loadingState').innerHTML = '<p style="color:#dc3545;">Error loading data. Check your API URL and try again.</p><button class="btn btn-light" onclick="loadData()" style="margin-top:1rem;">🔄 Retry</button>';
+    }
+}
+
+function renderTable() {
+    const filtered = getFiltered();
+    document.getElementById('loadingState').style.display = 'none';
+    if (filtered.length === 0) { document.getElementById('emptyState').style.display = 'block'; document.getElementById('dataTable').style.display = 'none'; return; }
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('dataTable').style.display = 'table';
+    document.getElementById('tableBody').innerHTML = filtered.map((s, i) => `<tr><td><strong>${s.studentId}</strong></td><td>${s.studentName}</td><td>${s.cafeName}</td><td><span class="badge ${s.status === 'Submitted' ? 'submitted' : 'progress'}">${s.status === 'Submitted' ? '✅' : '📝'} ${s.status}</span></td><td>${formatDate(s.timestamp)}</td><td><button class="action-btn" onclick="viewPlan(${i})">👁️ View</button></td></tr>`).join('');
+}
+
+function getFiltered() {
+    const search = document.getElementById('searchBox').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    return allStudents.filter(s => {
+        const matchSearch = s.studentName.toLowerCase().includes(search) || String(s.studentId).toLowerCase().includes(search) || (s.cafeName && s.cafeName.toLowerCase().includes(search));
+        return matchSearch && (status === 'all' || s.status === status);
+    });
+}
+
+function filterTable() { renderTable(); }
+
+function updateStats() {
+    const total = allStudents.length, submitted = allStudents.filter(s => s.status === 'Submitted').length;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('submittedCount').textContent = submitted;
+    document.getElementById('progressCount').textContent = total - submitted;
+    document.getElementById('rateCount').textContent = (total > 0 ? Math.round((submitted / total) * 100) : 0) + '%';
+}
+
+function formatDate(d) { if (!d) return 'N/A'; try { const date = new Date(d); return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); } catch(e) { return d; } }
+
+function viewPlan(index) {
+    const s = getFiltered()[index]; currentPlan = s;
+    document.getElementById('modalTitle').textContent = (s.cafeName || 'Business Plan') + ' - ' + s.studentName;
+    const d = s.data || {};
+    document.getElementById('modalBody').innerHTML = `
+        <div class="plan-section" style="background:#E3F2FD;border:2px solid #004E89;"><h3>Student Information</h3><div class="plan-item"><span class="plan-label">ID:</span> ${s.studentId}</div><div class="plan-item"><span class="plan-label">Name:</span> ${s.studentName}</div><div class="plan-item"><span class="plan-label">Status:</span> ${s.status}</div></div>
+        <div class="plan-section"><h3>1. Executive Summary</h3><div class="plan-item"><span class="plan-label">Café Name:</span> ${d.cafeName || 'N/A'}</div><div class="plan-item"><span class="plan-label">Mission:</span> ${d.mission || 'N/A'}</div><div class="plan-item"><span class="plan-label">Description:</span> ${d.briefDesc || 'N/A'}</div><div class="plan-item"><span class="plan-label">Main Goal:</span> ${d.mainGoal || 'N/A'}</div></div>
+        <div class="plan-section"><h3>2. Business Description</h3><div class="plan-item"><span class="plan-label">Type:</span> ${d.cafeType || 'N/A'}</div><div class="plan-item"><span class="plan-label">Theme:</span> ${d.theme || 'N/A'}</div><div class="plan-item"><span class="plan-label">Location:</span> ${d.location || 'N/A'}</div><div class="plan-item"><span class="plan-label">Hours:</span> ${d.hours || 'N/A'}</div><div class="plan-item"><span class="plan-label">USP:</span> ${d.usp || 'N/A'}</div></div>
+        <div class="plan-section"><h3>3. Products & Services</h3><div class="plan-item"><span class="plan-label">Menu Items:</span> ${d.menuItems || 'N/A'}</div><div class="plan-item"><span class="plan-label">Service Style:</span> ${d.serviceStyle || 'N/A'}</div><div class="plan-item"><span class="plan-label">Signature Item:</span> ${d.signature || 'N/A'}</div></div>
+        <div class="plan-section"><h3>4. Market Analysis</h3><div class="plan-item"><span class="plan-label">Target Customers:</span> ${d.targetCustomers || 'N/A'}</div><div class="plan-item"><span class="plan-label">Customer Needs:</span> ${d.customerNeeds || 'N/A'}</div><div class="plan-item"><span class="plan-label">Expected Customers:</span> ${d.expectedCustomers || 'N/A'}</div></div>
+        <div class="plan-section"><h3>5. Marketing Plan</h3><div class="plan-item"><span class="plan-label">Strategies:</span> ${d.promoStrategies || 'N/A'}</div><div class="plan-item"><span class="plan-label">Ticketing:</span> ${d.ticketing || 'N/A'}</div><div class="plan-item"><span class="plan-label">Ticket Price:</span> ₱${d.ticketPrice || 'N/A'}</div></div>
+        <div class="plan-section"><h3>6. Operations Plan</h3><div class="plan-item"><span class="plan-label">Team Roles:</span> ${d.teamRoles || 'N/A'}</div><div class="plan-item"><span class="plan-label">Equipment:</span> ${d.equipment || 'N/A'}</div></div>
+        <div class="plan-section"><h3>7. Financial Plan</h3><div class="plan-item"><span class="plan-label">Total Startup:</span> ₱${d.totalStartup || 'N/A'}</div><div class="plan-item"><span class="plan-label">Total Revenue:</span> ₱${d.totalRevenue || 'N/A'}</div><div class="plan-item"><span class="plan-label">Profit:</span> ₱${d.profit || 'N/A'}</div></div>`;
+    document.getElementById('modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) { if (e && e.target !== e.currentTarget) return; document.getElementById('modal').classList.remove('show'); document.body.style.overflow = ''; currentPlan = null; }
+
+function downloadPlan() {
+    if (!currentPlan) return;
+    const s = currentPlan, d = s.data || {};
+    let text = 'BUSINESS PLAN: ' + (d.cafeName || 'Untitled') + '\n' + '='.repeat(50) + '\n\nStudent ID: ' + s.studentId + '\nStudent Name: ' + s.studentName + '\nStatus: ' + s.status + '\n\n';
+    text += '1. EXECUTIVE SUMMARY\n' + '-'.repeat(30) + '\nCafe: ' + (d.cafeName || 'N/A') + '\nMission: ' + (d.mission || 'N/A') + '\nGoal: ' + (d.mainGoal || 'N/A') + '\n\n';
+    text += '7. FINANCIAL PLAN\n' + '-'.repeat(30) + '\nStartup: P' + (d.totalStartup || 'N/A') + '\nRevenue: P' + (d.totalRevenue || 'N/A') + '\nProfit: P' + (d.profit || 'N/A') + '\n';
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = s.studentId + '_' + s.studentName.replace(/\s+/g, '_') + '_Plan.txt'; a.click();
+}
+
+function exportCSV() {
+    if (allStudents.length === 0) { alert('No data'); return; }
+    let csv = 'Student ID,Name,Cafe Name,Status,Last Updated\n';
+    allStudents.forEach(s => { csv += '"' + s.studentId + '","' + s.studentName + '","' + s.cafeName + '","' + s.status + '","' + formatDate(s.timestamp) + '"\n'; });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'business_plans_' + new Date().toISOString().split('T')[0] + '.csv'; a.click();
+}
+
+loadData();
+</script>
+</body>
+</html>
